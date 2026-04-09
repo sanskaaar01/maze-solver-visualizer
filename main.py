@@ -26,7 +26,7 @@ def generate_maze(rows, cols):
 
     carve(0, 0)
 
-    # 🔥 add loops
+    # Add loops
     for _ in range((rows * cols) // 8):
         i = random.randint(1, rows-2)
         j = random.randint(1, cols-2)
@@ -106,7 +106,7 @@ def dijkstra(maze, weights, start, end):
 class MazeApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Maze Solver (Final Version)")
+        self.root.title("Maze Solver (Ultimate Version)")
 
         self.canvas = tk.Canvas(root, width=COLS*CELL_SIZE, height=ROWS*CELL_SIZE)
         self.canvas.pack()
@@ -117,10 +117,8 @@ class MazeApp:
         self.result_label.pack()
 
         self.reset()
-
         self.canvas.bind("<Button-1>", self.on_click)
 
-    # ---------- BUTTONS ----------
     def create_buttons(self):
         frame = tk.Frame(self.root)
         frame.pack()
@@ -130,11 +128,9 @@ class MazeApp:
         tk.Button(frame, text="Compare Both", command=self.compare_popup).pack(side="left", padx=5)
         tk.Button(frame, text="New Maze", command=self.reset).pack(side="left", padx=5)
 
-    # ---------- RESET ----------
     def reset(self):
         self.maze = generate_maze(ROWS, COLS)
 
-        # strong weights
         self.weights = [[random.choice([1,1,1,1,20,30]) if self.maze[i][j]==0 else None
                          for j in range(COLS)] for i in range(ROWS)]
 
@@ -144,7 +140,6 @@ class MazeApp:
         self.draw_maze()
         self.result_label.config(text="")
 
-    # ---------- DRAW ----------
     def draw_maze(self):
         self.canvas.delete("all")
 
@@ -153,15 +148,9 @@ class MazeApp:
                 x1, y1 = j*CELL_SIZE, i*CELL_SIZE
                 x2, y2 = x1 + CELL_SIZE, y1 + CELL_SIZE
 
-                if self.maze[i][j] == 1:
-                    color = "black"
-                else:
-                    cost = self.weights[i][j]
-                    color = "#e0f7fa" if cost == 1 else "#0d47a1"
-
+                color = "black" if self.maze[i][j] == 1 else "#e0f7fa"
                 self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline="gray")
 
-    # ---------- CLICK ----------
     def on_click(self, event):
         row = event.y // CELL_SIZE
         col = event.x // CELL_SIZE
@@ -185,53 +174,56 @@ class MazeApp:
         x2, y2 = x1 + CELL_SIZE, y1 + CELL_SIZE
         canvas.create_rectangle(x1, y1, x2, y2, fill=color)
 
-    def animate(self, canvas, path, color):
+    def animate(self, canvas, path, color, speed):
         for i, (r, c) in enumerate(path):
-            self.root.after(20*i, lambda r=r,c=c: self.draw_cell(canvas, r, c, color))
+            self.root.after(speed*i, lambda r=r,c=c: self.draw_cell(canvas, r, c, color))
 
-    # ---------- BFS ----------
     def solve_bfs(self):
         if not self.start or not self.end:
             return
         path = bfs(self.maze, self.start, self.end)
-        self.animate(self.canvas, path, "blue")
+        self.animate(self.canvas, path, "blue", 20)
 
-    # ---------- DIJKSTRA ----------
     def solve_dijkstra(self):
         if not self.start or not self.end:
             return
         path = dijkstra(self.maze, self.weights, self.start, self.end)
-        self.animate(self.canvas, path, "orange")
+        self.animate(self.canvas, path, "orange", 20)
 
-    # ---------- POPUP COMPARISON ----------
     def compare_popup(self):
         if not self.start or not self.end:
             return
 
         popup = tk.Toplevel(self.root)
-        popup.title("BFS vs Dijkstra Comparison")
+        popup.title("Comparison")
+
+        speed = tk.IntVar(value=20)
+
+        tk.Label(popup, text="Animation Speed").pack()
+        tk.Scale(popup, from_=5, to=100, orient="horizontal", variable=speed).pack()
 
         frame = tk.Frame(popup)
         frame.pack()
 
+        # Titles
+        tk.Label(frame, text="BFS", font=("Arial", 12, "bold")).grid(row=0, column=0)
+        tk.Label(frame, text="Dijkstra", font=("Arial", 12, "bold")).grid(row=0, column=1)
+
         canvas_bfs = tk.Canvas(frame, width=COLS*CELL_SIZE, height=ROWS*CELL_SIZE)
-        canvas_bfs.pack(side="left")
+        canvas_bfs.grid(row=1, column=0)
 
         canvas_dij = tk.Canvas(frame, width=COLS*CELL_SIZE, height=ROWS*CELL_SIZE)
-        canvas_dij.pack(side="right")
+        canvas_dij.grid(row=1, column=1)
 
-        # draw maze on both
+        # draw maze
         for i in range(ROWS):
             for j in range(COLS):
                 x1, y1 = j*CELL_SIZE, i*CELL_SIZE
                 x2, y2 = x1 + CELL_SIZE, y1 + CELL_SIZE
-
                 color = "black" if self.maze[i][j] == 1 else "#e0f7fa"
-
                 canvas_bfs.create_rectangle(x1, y1, x2, y2, fill=color)
                 canvas_dij.create_rectangle(x1, y1, x2, y2, fill=color)
 
-        # mark start/end
         for canvas in [canvas_bfs, canvas_dij]:
             self.draw_cell(canvas, *self.start, "green")
             self.draw_cell(canvas, *self.end, "red")
@@ -250,12 +242,11 @@ class MazeApp:
 
         # animate
         for i, (r, c) in enumerate(path_bfs):
-            popup.after(20*i, lambda r=r,c=c: self.draw_cell(canvas_bfs, r, c, "blue"))
+            popup.after(speed.get()*i, lambda r=r,c=c: self.draw_cell(canvas_bfs, r, c, "blue"))
 
         for i, (r, c) in enumerate(path_dij):
-            popup.after(20*i, lambda r=r,c=c: self.draw_cell(canvas_dij, r, c, "orange"))
+            popup.after(speed.get()*i, lambda r=r,c=c: self.draw_cell(canvas_dij, r, c, "orange"))
 
-        # results
         tk.Label(popup, text=
             f"BFS → Steps:{len(path_bfs)} Cost:{bfs_cost} Time:{bfs_time:.5f}s\n"
             f"Dijkstra → Steps:{len(path_dij)} Cost:{dij_cost} Time:{dij_time:.5f}s",
@@ -263,7 +254,6 @@ class MazeApp:
         ).pack()
 
 
-# ---------------- RUN ----------------
 root = tk.Tk()
 app = MazeApp(root)
 root.mainloop()
