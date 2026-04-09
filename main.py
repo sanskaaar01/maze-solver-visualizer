@@ -25,6 +25,13 @@ def generate_maze(rows, cols):
                     carve(nx, ny)
 
     carve(0, 0)
+
+    # 🔥 add loops
+    for _ in range((rows * cols) // 8):
+        i = random.randint(1, rows-2)
+        j = random.randint(1, cols-2)
+        maze[i][j] = 0
+
     maze[0][0] = 0
     maze[rows-1][cols-1] = 0
     return maze
@@ -99,56 +106,37 @@ def dijkstra(maze, weights, start, end):
 class MazeApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Maze Solver (Final Project)")
+        self.root.title("Maze Solver (Final Version)")
 
         self.canvas = tk.Canvas(root, width=COLS*CELL_SIZE, height=ROWS*CELL_SIZE)
         self.canvas.pack()
 
         self.create_buttons()
-        self.create_legend()
 
-        self.result_label = tk.Label(root, text="", font=("Arial", 11), justify="left")
+        self.result_label = tk.Label(root, text="", font=("Arial", 11))
         self.result_label.pack()
 
         self.reset()
+
         self.canvas.bind("<Button-1>", self.on_click)
 
     # ---------- BUTTONS ----------
     def create_buttons(self):
         frame = tk.Frame(self.root)
-        frame.pack(pady=5)
+        frame.pack()
 
         tk.Button(frame, text="Solve BFS", command=self.solve_bfs).pack(side="left", padx=5)
         tk.Button(frame, text="Solve Dijkstra", command=self.solve_dijkstra).pack(side="left", padx=5)
-        tk.Button(frame, text="Compare Both", command=self.compare_algorithms).pack(side="left", padx=5)
-        tk.Button(frame, text="Clear Path", command=self.clear_path).pack(side="left", padx=5)
+        tk.Button(frame, text="Compare Both", command=self.compare_popup).pack(side="left", padx=5)
         tk.Button(frame, text="New Maze", command=self.reset).pack(side="left", padx=5)
-
-    # ---------- LEGEND ----------
-    def create_legend(self):
-        tk.Label(
-            self.root,
-            text="Green=Start  Red=End  Blue=BFS  Orange=Dijkstra",
-            font=("Arial", 10)
-        ).pack()
 
     # ---------- RESET ----------
     def reset(self):
         self.maze = generate_maze(ROWS, COLS)
 
-        # 🔥 STRONG WEIGHT VARIATION (FIXED)
-        self.weights = []
-        for i in range(ROWS):
-            row = []
-            for j in range(COLS):
-                if self.maze[i][j] == 0:
-                    if random.random() < 0.7:
-                        row.append(1)  # cheap path
-                    else:
-                        row.append(random.randint(8, 20))  # expensive
-                else:
-                    row.append(None)
-            self.weights.append(row)
+        # strong weights
+        self.weights = [[random.choice([1,1,1,1,20,30]) if self.maze[i][j]==0 else None
+                         for j in range(COLS)] for i in range(ROWS)]
 
         self.start = None
         self.end = None
@@ -169,12 +157,7 @@ class MazeApp:
                     color = "black"
                 else:
                     cost = self.weights[i][j]
-                    if cost == 1:
-                        color = "#e0f7fa"
-                    elif cost < 10:
-                        color = "#64b5f6"
-                    else:
-                        color = "#0d47a1"
+                    color = "#e0f7fa" if cost == 1 else "#0d47a1"
 
                 self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline="gray")
 
@@ -188,80 +171,96 @@ class MazeApp:
 
         if not self.start:
             self.start = (row, col)
-            self.color_cell(row, col, "green")
         elif not self.end:
             self.end = (row, col)
-            self.color_cell(row, col, "red")
 
-    def color_cell(self, row, col, color):
-        x1, y1 = col*CELL_SIZE, row*CELL_SIZE
+        self.draw_maze()
+        if self.start:
+            self.draw_cell(self.canvas, *self.start, "green")
+        if self.end:
+            self.draw_cell(self.canvas, *self.end, "red")
+
+    def draw_cell(self, canvas, r, c, color):
+        x1, y1 = c*CELL_SIZE, r*CELL_SIZE
         x2, y2 = x1 + CELL_SIZE, y1 + CELL_SIZE
-        self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline="gray")
+        canvas.create_rectangle(x1, y1, x2, y2, fill=color)
+
+    def animate(self, canvas, path, color):
+        for i, (r, c) in enumerate(path):
+            self.root.after(20*i, lambda r=r,c=c: self.draw_cell(canvas, r, c, color))
 
     # ---------- BFS ----------
     def solve_bfs(self):
         if not self.start or not self.end:
             return
         path = bfs(self.maze, self.start, self.end)
-        self.animate_path(path, "blue")
+        self.animate(self.canvas, path, "blue")
 
     # ---------- DIJKSTRA ----------
     def solve_dijkstra(self):
         if not self.start or not self.end:
             return
         path = dijkstra(self.maze, self.weights, self.start, self.end)
-        self.animate_path(path, "orange")
+        self.animate(self.canvas, path, "orange")
 
-    # ---------- COMPARE ----------
-    def compare_algorithms(self):
+    # ---------- POPUP COMPARISON ----------
+    def compare_popup(self):
         if not self.start or not self.end:
             return
+
+        popup = tk.Toplevel(self.root)
+        popup.title("BFS vs Dijkstra Comparison")
+
+        frame = tk.Frame(popup)
+        frame.pack()
+
+        canvas_bfs = tk.Canvas(frame, width=COLS*CELL_SIZE, height=ROWS*CELL_SIZE)
+        canvas_bfs.pack(side="left")
+
+        canvas_dij = tk.Canvas(frame, width=COLS*CELL_SIZE, height=ROWS*CELL_SIZE)
+        canvas_dij.pack(side="right")
+
+        # draw maze on both
+        for i in range(ROWS):
+            for j in range(COLS):
+                x1, y1 = j*CELL_SIZE, i*CELL_SIZE
+                x2, y2 = x1 + CELL_SIZE, y1 + CELL_SIZE
+
+                color = "black" if self.maze[i][j] == 1 else "#e0f7fa"
+
+                canvas_bfs.create_rectangle(x1, y1, x2, y2, fill=color)
+                canvas_dij.create_rectangle(x1, y1, x2, y2, fill=color)
+
+        # mark start/end
+        for canvas in [canvas_bfs, canvas_dij]:
+            self.draw_cell(canvas, *self.start, "green")
+            self.draw_cell(canvas, *self.end, "red")
 
         # BFS
         t1 = time.time()
         path_bfs = bfs(self.maze, self.start, self.end)
         bfs_time = time.time() - t1
-        bfs_steps = len(path_bfs)
-        bfs_cost = sum(self.weights[r][c] for r, c in path_bfs)
+        bfs_cost = sum(self.weights[r][c] for r,c in path_bfs)
 
         # Dijkstra
         t2 = time.time()
         path_dij = dijkstra(self.maze, self.weights, self.start, self.end)
         dij_time = time.time() - t2
-        dij_steps = len(path_dij)
-        dij_cost = sum(self.weights[r][c] for r, c in path_dij)
+        dij_cost = sum(self.weights[r][c] for r,c in path_dij)
 
-        # Animate
-        self.animate_path(path_bfs, "blue")
-        self.animate_path(path_dij, "orange")
+        # animate
+        for i, (r, c) in enumerate(path_bfs):
+            popup.after(20*i, lambda r=r,c=c: self.draw_cell(canvas_bfs, r, c, "blue"))
 
-        # Compare
-        faster = "BFS" if bfs_time < dij_time else "Dijkstra"
-        shorter = "BFS" if bfs_steps < dij_steps else "Dijkstra"
-        cheaper = "BFS" if bfs_cost < dij_cost else "Dijkstra"
+        for i, (r, c) in enumerate(path_dij):
+            popup.after(20*i, lambda r=r,c=c: self.draw_cell(canvas_dij, r, c, "orange"))
 
-        result = (
-            f"BFS → Steps: {bfs_steps} | Cost: {bfs_cost} | Time: {bfs_time:.6f}s\n"
-            f"Dijkstra → Steps: {dij_steps} | Cost: {dij_cost} | Time: {dij_time:.6f}s\n\n"
-            f"⚡ Faster: {faster}\n"
-            f"📏 Shorter Path: {shorter}\n"
-            f"💰 Cheaper Path: {cheaper}"
-        )
-
-        self.result_label.config(text=result)
-
-    # ---------- CLEAR ----------
-    def clear_path(self):
-        self.draw_maze()
-        if self.start:
-            self.color_cell(*self.start, "green")
-        if self.end:
-            self.color_cell(*self.end, "red")
-
-    # ---------- ANIMATION ----------
-    def animate_path(self, path, color):
-        for i, (r, c) in enumerate(path):
-            self.root.after(20 * i, lambda r=r, c=c: self.color_cell(r, c, color))
+        # results
+        tk.Label(popup, text=
+            f"BFS → Steps:{len(path_bfs)} Cost:{bfs_cost} Time:{bfs_time:.5f}s\n"
+            f"Dijkstra → Steps:{len(path_dij)} Cost:{dij_cost} Time:{dij_time:.5f}s",
+            font=("Arial", 11)
+        ).pack()
 
 
 # ---------------- RUN ----------------
