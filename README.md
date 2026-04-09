@@ -4,49 +4,55 @@
 
 This project is an interactive **maze solver and algorithm visualizer** built using Python and Tkinter.
 
-It demonstrates how **Breadth-First Search (BFS)** and **Dijkstra’s Algorithm** behave on a maze modeled as a graph, including real-time visualization, animation, and performance comparison.
+It demonstrates how **Breadth-First Search (BFS)** and **Dijkstra’s Algorithm** behave on the same maze, with real-time visualization, animation, and comparison.
 
 ---
 
 ## 🎯 Features
 
-* 🧩 Random maze generation (always solvable)
-* 🖱 Click to select **Start** and **End** points
-* 🔵 BFS shortest path visualization (minimum steps)
-* 🟠 Dijkstra shortest path visualization (minimum cost)
+* 🧩 Random maze generation (with loops → multiple paths)
+* 🖱 Click to set:
+
+  * Start node (Green)
+  * End node (Red)
+* 🔵 Solve using **BFS** (shortest path in steps)
+* 🟠 Solve using **Dijkstra** (minimum cost path)
+* ⚔️ **Compare Both (Popup Window)**
+
+  * Side-by-side visualization
+  * BFS vs Dijkstra simultaneously
 * 🎬 Animated path traversal
-* ⚖️ Algorithm comparison:
+* 🎚️ Adjustable animation speed (slider)
+* ⚖️ Performance comparison:
 
   * Steps
   * Cost
   * Execution time
-* 🎨 Weighted maze (different traversal costs)
-* 🧹 Clear path and regenerate maze functionality
 
 ---
 
 ## 🧠 Concepts Used
 
-* Graph representation (grid → graph)
+* Graph representation (maze → grid graph)
 * Breadth-First Search (BFS)
 * Dijkstra’s Algorithm
-* Priority Queue (Min Heap)
-* Algorithm analysis (time, cost, path length)
-* Path reconstruction using parent tracking
+* Priority Queue (Min Heap using `heapq`)
+* Path reconstruction
+* Algorithm comparison (time vs cost vs steps)
 
 ---
 
 ## ⚔️ BFS vs Dijkstra
 
-| Feature         | BFS                   | Dijkstra              |
-| --------------- | --------------------- | --------------------- |
-| Graph Type      | Unweighted            | Weighted              |
-| Goal            | Shortest path (steps) | Minimum cost path     |
-| Data Structure  | Queue                 | Priority Queue (Heap) |
-| Time Complexity | O(V + E)              | O((V + E) log V)      |
+| Feature        | BFS                   | Dijkstra                |
+| -------------- | --------------------- | ----------------------- |
+| Graph Type     | Unweighted            | Weighted                |
+| Goal           | Shortest path (steps) | Minimum cost path       |
+| Data Structure | Queue                 | Priority Queue          |
+| Behavior       | Fast, ignores cost    | Optimal, considers cost |
 
-👉 In some cases, both may produce the same path due to maze structure.
-👉 In weighted scenarios, Dijkstra may choose a longer but cheaper path.
+👉 In some cases both may give the same path (due to maze structure).
+👉 With weighted paths, Dijkstra may choose a longer but cheaper route.
 
 ---
 
@@ -69,45 +75,33 @@ python main.py
 
 ## 🕹️ How to Use
 
-1. Click on any open cell → set **Start (Green)**
-2. Click another cell → set **End (Red)**
+1. Click any open cell → set **Start**
+2. Click another cell → set **End**
 3. Choose:
 
-   * **Solve BFS**
-   * **Solve Dijkstra**
-   * **Compare Both**
-4. View:
-
-   * Animated path
-   * Stats (steps, cost, time)
+   * Solve BFS
+   * Solve Dijkstra
+   * Compare Both (opens popup)
+4. Adjust speed (in popup)
+5. Watch animations and compare results
 
 ---
 
 ## 📊 Sample Output
 
 ```
-BFS → Steps: 45 | Cost: 180 | Time: 0.0002s  
-Dijkstra → Steps: 60 | Cost: 120 | Time: 0.0005s  
-
-⚡ Faster: BFS  
-📏 Shorter Path: BFS  
-💰 Cheaper Path: Dijkstra  
+BFS → Steps: 45 | Cost: 180 | Time: 0.00020s  
+Dijkstra → Steps: 60 | Cost: 120 | Time: 0.00045s  
 ```
-
----
-
-## 📷 Screenshot
-
-(Add your screenshot in `/screenshots/app.png`)
 
 ---
 
 ## 💡 Learning Outcome
 
-This project helps in understanding:
+This project helps understand:
 
-* Difference between **unweighted and weighted shortest path algorithms**
-* Trade-offs between **speed vs optimal cost**
+* Difference between **unweighted vs weighted shortest paths**
+* Trade-offs between **speed and optimal cost**
 * Practical use of **graphs and priority queues**
 
 ---
@@ -122,10 +116,10 @@ This project helps in understanding:
 
 ## 🚀 Future Improvements
 
-* Step-by-step exploration visualization (BFS wave)
+* Show exploration wave (BFS vs Dijkstra)
+* Export results to file
 * Adjustable maze size
-* Speed control for animation
-* Export results as report
+* Improved UI styling
 
 ---
 
