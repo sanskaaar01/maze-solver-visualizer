@@ -131,4 +131,4 @@ This project helps in understanding:
 
 ## 👨‍💻 Author
 
-**Sanskar Bhosle**
+**Sanskar r Bhosle**
