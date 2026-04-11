@@ -125,4 +125,4 @@ This project helps understand:
 
 ## 👨‍💻 Author
 
-**Sanskar Raj Bhosle**
+**Sanskar Ra Bhosle**
