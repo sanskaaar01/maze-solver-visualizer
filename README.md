@@ -1,4 +1,4 @@
-# 🚀 Maze Solver Visualizer (BFS vs Dijkstra)
+# 🚀 Maze Solver Visualizer (BFS vs Dijkstra
 
 ## 📌 Overview
 
